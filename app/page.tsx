@@ -52,10 +52,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-white pt-20 px-4">
-      <div className="w-full max-w-xl mx-auto space-y-6 p-6 rounded-lg border border-gray-200 shadow-sm">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-gray-900">Track your package</h1>
-          <p className="text-gray-600">Data provided by Shipment Tracker</p>
+      <div className="w-full max-w-xl mx-auto space-y-6 p-5 rounded-lg border border-gray-200 shadow-sm">
+        <div className="space-y-1 pb-2 border-b border-gray-200">
+          <h1 className="text-2xl font-light text-gray-900">Track your package</h1>
+          <p className="text-xs text-gray-500">Real-time shipment updates</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,8 +85,8 @@ export default function Home() {
           )}
         </form>
 
-        <p className="text-center text-gray-500 italic">
-          Only your tracking number will be used to find your package
+        <p className="text-center text-gray-500 text-sm">
+          Enter your tracking number to see the latest status of your shipment
         </p>
       </div>
     </main>
