@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: shipment-tracker
+    env: node
+    buildCommand: ./scripts/render-build.sh
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:/var/data/sqlite.db
+      - key: NEXT_PUBLIC_OPENROUTE_API_KEY
+        sync: false
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1

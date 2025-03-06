@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Shipment {
+  id            String          @id @default(uuid())
+  trackingNumber String         @unique
+  orderReferenceNumber String?
+  customerName  String?
+  email         String?
+  phoneNumber   String?
+  statusDetails String?
+  statusColor   String?  @default("#22c55e") // Default green color
+  
+  // Origin Address
+  senderName    String?
+  originStreetAddress String?
+  originCity    String?
+  originState   String?
+  originCountry String?
+  originPostalCode String?
+  origin        String?
+  originLatitude Float?
+  originLongitude Float?
+  
+  // Destination Address
+  receiverName  String?
+  destinationStreetAddress String?
+  destinationCity String?
+  destinationState String?
+  destinationCountry String?
+  destinationPostalCode String?
+  destination   String?
+  destinationLatitude Float?
+  destinationLongitude Float?
+  
+  // Package Details
+  weight        String?
+  length        String?
+  width         String?
+  height        String?
+  packageType   String?
+  contentsDescription String?
+  declaredValue String?
+  
+  // Shipping Details
+  shippingMethod String?
+  trackingProgress String?
+  shipmentStatus String?
+  currentLocation String?
+  currentLatitude Float?
+  currentLongitude Float?
+  description   String?
+  estimatedDeliveryDate DateTime?
+  shipmentDate  DateTime?
+  insuranceDetails String?
+  
+  // Additional Information
+  specialInstructions String?
+  returnInstructions String?
+  customerNotes String?
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  events        TrackingEvent[]
+  editHistory   EditHistory[]
+}
+
+model TrackingEvent {
+  id          String    @id @default(uuid())
+  status      String
+  description String
+  location    String?
+  timestamp   DateTime  @default(now())
+  shipmentId  String
+  shipment    Shipment  @relation(fields: [shipmentId], references: [id])
+}
+
+model Admin {
+  id       String @id @default(uuid())
+  username String @unique
+  password String
+  createdAt DateTime @default(now())
+}
+
+model EditHistory {
+  id          String    @id @default(uuid())
+  shipmentId  String
+  shipment    Shipment  @relation(fields: [shipmentId], references: [id])
+  fieldName   String
+  oldValue    String?
+  newValue    String
+  timestamp   DateTime  @default(now())
+}

@@ -1,0 +1,945 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function NewShipment() {
+  // Helper functions to update addresses
+  const updateOriginAddress = (data: any) => {
+    const address = [
+      data.originStreetAddress,
+      data.originCity,
+      data.originState,
+      data.originCountry,
+      data.originPostalCode
+    ].filter(Boolean).join(', ');
+    
+    setFormData(prev => ({
+      ...prev,
+      origin: address
+    }));
+  };
+
+  const updateDestinationAddress = (data: any) => {
+    const address = [
+      data.destinationStreetAddress,
+      data.destinationCity,
+      data.destinationState,
+      data.destinationCountry,
+      data.destinationPostalCode
+    ].filter(Boolean).join(', ');
+    
+    setFormData(prev => ({
+      ...prev,
+      destination: address
+    }));
+  };
+
+  const updateCurrentLocation = (data: any) => {
+    const location = [
+      data.currentCity,
+      data.currentState
+    ].filter(Boolean).join(', ');
+    
+    setFormData(prev => ({
+      ...prev,
+      currentLocation: location
+    }));
+  };
+
+  const [currentSteps, setCurrentSteps] = useState({
+    step1: '',
+    step2: '',
+    step3: ''
+  });
+
+  const [savedSteps, setSavedSteps] = useState<Array<{
+    step1: string;
+    step2: string;
+    step3: string;
+  }>>([]);
+
+  const handleStepChange = (field: string, value: string) => {
+    setCurrentSteps(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Update shipment status when Step 1 changes
+    if (field === 'step1') {
+      setFormData(prev => ({
+        ...prev,
+        shipmentStatus: value,
+        currentStatus: value  // Update both status fields
+      }));
+    }
+  };
+
+  const saveSteps = () => {
+    if (currentSteps.step1 || currentSteps.step2 || currentSteps.step3) {
+      setSavedSteps(prev => [...prev, { ...currentSteps }]);
+      setCurrentSteps({
+        step1: '',
+        step2: '',
+        step3: ''
+      });
+    }
+  };
+
+  const deleteSteps = (index: number) => {
+    setSavedSteps(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const [formData, setFormData] = useState<{
+    trackingNumber: string;
+    orderReferenceNumber: string;
+    customerName: string;
+    email: string;
+    phoneNumber: string;
+    statusDetails: string;
+    senderName: string;
+    originStreetAddress: string;
+    originCity: string;
+    originState: string;
+    originCountry: string;
+    originPostalCode: string;
+    origin: string;
+    receiverName: string;
+    destinationStreetAddress: string;
+    destinationCity: string;
+    destinationState: string;
+    destinationCountry: string;
+    destinationPostalCode: string;
+    destination: string;
+    weight: string;
+    length: string;
+    width: string;
+    height: string;
+    packageType: string;
+    contentsDescription: string;
+    declaredValue: string;
+    shippingMethod: string;
+    trackingProgress: string;
+    shipmentStatus: string;
+    currentLocation: string;
+    description: string;
+    shippingDate: string;
+    estimatedDeliveryDate: string;
+    insuranceDetails: string;
+    specialInstructions: string;
+    returnInstructions: string;
+    customerNotes: string;
+    statusColor: string;
+  }>({
+    trackingNumber: '',
+    orderReferenceNumber: '',
+    customerName: '',
+    email: '',
+    phoneNumber: '',
+    statusDetails: '',
+    
+    // Origin Address
+    senderName: '',
+    originStreetAddress: '',
+    originCity: '',
+    originState: '',
+    originCountry: '',
+    originPostalCode: '',
+    
+    // Destination Address
+    receiverName: '',
+    destinationStreetAddress: '',
+    destinationCity: '',
+    destinationState: '',
+    destinationCountry: '',
+    destinationPostalCode: '',
+    
+    // Package Details
+    weight: '',
+    length: '',
+    width: '',
+    height: '',
+    packageType: '',
+    contentsDescription: '',
+    declaredValue: '',
+    
+    // Shipping Details
+    shippingMethod: '',
+    trackingProgress: 'Pickup',
+    shipmentStatus: 'Pending',
+    currentLocation: '',
+    description: '',
+    estimatedDeliveryDate: '',
+    insuranceDetails: '',
+    
+    // Additional Information
+    specialInstructions: '',
+    returnInstructions: '',
+    customerNotes: '',
+    statusColor: '#22c55e',  // Default green color
+    
+    // New Fields
+    origin: '',
+    destination: '',
+    shippingDate: new Date().toISOString().split('T')[0],
+  });
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const packageTypes = ['Box', 'Envelope', 'Pallet', 'Other'];
+  const shippingMethods = ['Standard', 'Express', 'Overnight'];
+  const paymentStatuses = ['Paid', 'Unpaid'];
+  const trackingProgressOptions = ['Pickup', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered'];
+
+
+  const formatDateForSubmission = (dateString: string) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      throw new Error('Invalid date format');
+    }
+    return date.toISOString();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (!formData.trackingNumber) {
+        throw new Error('Tracking number is required');
+      }
+
+      // Format dates properly
+      const submissionData = {
+        ...formData,
+        shipmentDate: formatDateForSubmission(formData.shippingDate),
+        estimatedDeliveryDate: formatDateForSubmission(formData.estimatedDeliveryDate),
+        statusColor: formData.statusColor || '#22c55e',  // Ensure statusColor is included
+        shipmentStatus: formData.shipmentStatus || 'Pending',  // Use shipment status from form
+        currentStatus: formData.shipmentStatus || 'Pending',  // Also set currentStatus
+        trackingHistory: [{
+          status: formData.trackingProgress || 'Pickup',
+          location: formData.currentLocation || 'Unknown',
+          description: formData.description || '',
+          timestamp: new Date().toISOString()
+        }]
+      };
+
+      console.log('Submitting form data:', submissionData);
+      
+      const response = await fetch('/api/admin/shipments', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      if (!responseText.trim()) {
+        throw new Error('Empty server response');
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Error parsing JSON response:', parseError);
+        throw new Error(`Invalid server response: ${responseText.slice(0, 100)}`);
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to create shipment');
+      }
+
+      console.log('Response data:', data);
+      router.push('/admin');
+    } catch (err: any) {
+      console.error('Error in handleSubmit:', err);
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputClassName = "mt-2 block w-full px-4 py-3 text-base rounded-xl border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-white/90 transition duration-200 ease-in-out";
+  const textareaClassName = "mt-2 block w-full px-4 py-3 text-base rounded-xl border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-white/90 transition duration-200 ease-in-out";
+
+  return (
+    <main className="min-h-screen p-8 bg-gradient-to-br from-purple-100 via-indigo-100 to-blue-100">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <button
+            onClick={() => router.back()}
+            className="text-indigo-600 hover:text-indigo-900 font-medium"
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-indigo-100">
+          <h1 className="text-3xl font-bold text-indigo-900 mb-8">Create New Shipment</h1>
+          
+          {error && (
+            <div className="mb-6 p-4 text-red-700 bg-red-100/80 backdrop-blur-sm rounded-xl border border-red-200">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Tracking History Steps */}
+            <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
+              <h2 className="text-xl font-semibold text-indigo-900">Tracking History Step</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Status/Type</label>
+                  <input
+                    type="text"
+                    value={currentSteps.step1}
+                    onChange={(e) => handleStepChange('step1', e.target.value)}
+                    className={inputClassName}
+                    placeholder="e.g., Package Picked Up"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Location</label>
+                  <input
+                    type="text"
+                    value={currentSteps.step2}
+                    onChange={(e) => handleStepChange('step2', e.target.value)}
+                    className={inputClassName}
+                    placeholder="e.g., Dallas, Texas"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Timestamp (MMM DD)</label>
+                  <input
+                    type="text"
+                    value={currentSteps.step3}
+                    onChange={(e) => handleStepChange('step3', e.target.value)}
+                    className={inputClassName}
+                    placeholder="e.g., Jan 10, Feb 10, Mar 10"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-4 mt-4">
+                <button
+                  type="button"
+                  onClick={saveSteps}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                >
+                  Add Step
+                </button>
+              </div>
+
+              {/* Display saved steps */}
+              {savedSteps.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Saved Steps</h3>
+                  <div className="space-y-4">
+                    {savedSteps.map((step, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="grid grid-cols-3 gap-4 flex-1">
+                          <div>
+                            <span className="text-sm text-gray-500">Status:</span>
+                            <p className="text-gray-900">{step.step1}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Location:</span>
+                            <p className="text-gray-900">{step.step2}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Timestamp:</span>
+                            <p className="text-gray-900">{step.step3}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => deleteSteps(index)}
+                          className="ml-4 text-red-600 hover:text-red-800"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Basic Information */}
+            <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
+              <h2 className="text-xl font-semibold text-indigo-900">Basic Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Tracking Number</label>
+                  <input
+                    type="text"
+                    value={formData.trackingNumber}
+                    onChange={(e) => setFormData({ ...formData, trackingNumber: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Order Reference Number</label>
+                  <input
+                    type="text"
+                    value={formData.orderReferenceNumber}
+                    onChange={(e) => setFormData({ ...formData, orderReferenceNumber: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Customer Name</label>
+                  <input
+                    type="text"
+                    value={formData.customerName}
+                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Status Details</label>
+                  <input
+                    type="text"
+                    value={formData.statusDetails}
+                    onChange={(e) => setFormData({ ...formData, statusDetails: e.target.value })}
+                    className={inputClassName}
+                    placeholder="Enter status details"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Status Color</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={formData.statusColor || '#22c55e'}
+                      onChange={(e) => setFormData({ ...formData, statusColor: e.target.value })}
+                      className="h-10 w-20 p-1 rounded border border-gray-300"
+                    />
+                    <div 
+                      className="px-4 py-2 rounded text-white text-sm"
+                      style={{ backgroundColor: formData.statusColor || '#22c55e' }}
+                    >
+                      Preview Status
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Origin Address */}
+            <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
+              <h2 className="text-xl font-semibold text-indigo-900">Origin Address (Where it leaves from)</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Sender Name</label>
+                  <input
+                    type="text"
+                    value={formData.senderName}
+                    onChange={(e) => {
+                      setFormData({ ...formData, senderName: e.target.value });
+                      updateOriginAddress({ ...formData, senderName: e.target.value });
+                    }}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Street Address</label>
+                  <input
+                    type="text"
+                    value={formData.originStreetAddress}
+                    onChange={(e) => {
+                      setFormData({ ...formData, originStreetAddress: e.target.value });
+                      updateOriginAddress({ ...formData, originStreetAddress: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter street address"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">City</label>
+                  <input
+                    type="text"
+                    value={formData.originCity}
+                    onChange={(e) => {
+                      setFormData({ ...formData, originCity: e.target.value });
+                      updateOriginAddress({ ...formData, originCity: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter city"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">State/Province</label>
+                  <input
+                    type="text"
+                    value={formData.originState}
+                    onChange={(e) => {
+                      setFormData({ ...formData, originState: e.target.value });
+                      updateOriginAddress({ ...formData, originState: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter state/province"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Country</label>
+                  <input
+                    type="text"
+                    value={formData.originCountry}
+                    onChange={(e) => {
+                      setFormData({ ...formData, originCountry: e.target.value });
+                      updateOriginAddress({ ...formData, originCountry: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter country"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Postal Code</label>
+                  <input
+                    type="text"
+                    value={formData.originPostalCode}
+                    onChange={(e) => {
+                      setFormData({ ...formData, originPostalCode: e.target.value });
+                      updateOriginAddress({ ...formData, originPostalCode: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter postal code"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Destination Address */}
+            <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
+              <h2 className="text-xl font-semibold text-indigo-900">Destination Address (Where it's going)</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Receiver Name</label>
+                  <input
+                    type="text"
+                    value={formData.receiverName}
+                    onChange={(e) => {
+                      setFormData({ ...formData, receiverName: e.target.value });
+                      updateDestinationAddress({ ...formData, receiverName: e.target.value });
+                    }}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Street Address</label>
+                  <input
+                    type="text"
+                    value={formData.destinationStreetAddress}
+                    onChange={(e) => {
+                      setFormData({ ...formData, destinationStreetAddress: e.target.value });
+                      updateDestinationAddress({ ...formData, destinationStreetAddress: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter street address"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">City</label>
+                  <input
+                    type="text"
+                    value={formData.destinationCity}
+                    onChange={(e) => {
+                      setFormData({ ...formData, destinationCity: e.target.value });
+                      updateDestinationAddress({ ...formData, destinationCity: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter city"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">State/Province</label>
+                  <input
+                    type="text"
+                    value={formData.destinationState}
+                    onChange={(e) => {
+                      setFormData({ ...formData, destinationState: e.target.value });
+                      updateDestinationAddress({ ...formData, destinationState: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter state/province"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Country</label>
+                  <input
+                    type="text"
+                    value={formData.destinationCountry}
+                    onChange={(e) => {
+                      setFormData({ ...formData, destinationCountry: e.target.value });
+                      updateDestinationAddress({ ...formData, destinationCountry: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter country"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Postal Code</label>
+                  <input
+                    type="text"
+                    value={formData.destinationPostalCode}
+                    onChange={(e) => {
+                      setFormData({ ...formData, destinationPostalCode: e.target.value });
+                      updateDestinationAddress({ ...formData, destinationPostalCode: e.target.value });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter postal code"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Current Location */}
+            <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
+              <h2 className="text-xl font-semibold text-indigo-900">Current Location</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">City</label>
+                  <input
+                    type="text"
+                    value={formData.currentCity || ''}
+                    onChange={(e) => {
+                      const newCity = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        currentCity: newCity,
+                        currentLocation: `${newCity}${prev.currentState ? `, ${prev.currentState}` : ''}`
+                      }));
+                      updateCurrentLocation({
+                        ...formData,
+                        currentCity: newCity
+                      });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter current city"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">State/Province</label>
+                  <input
+                    type="text"
+                    value={formData.currentState || ''}
+                    onChange={(e) => {
+                      const newState = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        currentState: newState,
+                        currentLocation: `${prev.currentCity ? `${prev.currentCity}, ` : ''}${newState}`
+                      }));
+                      updateCurrentLocation({
+                        ...formData,
+                        currentState: newState
+                      });
+                    }}
+                    className={inputClassName}
+                    placeholder="Enter current state/province"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Package Details */}
+            <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
+              <h2 className="text-xl font-semibold text-indigo-900">Package Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
+                  <input
+                    type="number"
+                    value={formData.weight}
+                    onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Length (cm)</label>
+                  <input
+                    type="number"
+                    value={formData.length}
+                    onChange={(e) => setFormData({ ...formData, length: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Width (cm)</label>
+                  <input
+                    type="number"
+                    value={formData.width}
+                    onChange={(e) => setFormData({ ...formData, width: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Height (cm)</label>
+                  <input
+                    type="number"
+                    value={formData.height}
+                    onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Package Type</label>
+                  <input
+                    type="text"
+                    value={formData.packageType}
+                    onChange={(e) => setFormData({ ...formData, packageType: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Contents Description</label>
+                  <textarea
+                    value={formData.contentsDescription}
+                    onChange={(e) => setFormData({ ...formData, contentsDescription: e.target.value })}
+                    className={textareaClassName}
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Shipping Details */}
+            <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
+              <h2 className="text-xl font-semibold text-indigo-900">Shipping Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Origin</label>
+                  <input
+                    type="text"
+                    value={formData.origin}
+                    onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Destination</label>
+                  <input
+                    type="text"
+                    value={formData.destination}
+                    onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Tracking Progress</label>
+                  <select
+                    value={formData.trackingProgress}
+                    onChange={(e) => setFormData({ ...formData, trackingProgress: e.target.value })}
+                    className={inputClassName}
+                  >
+                    {trackingProgressOptions.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Shipment Status</label>
+                  <input
+                    type="text"
+                    value={formData.shipmentStatus}
+                    onChange={(e) => setFormData({ ...formData, shipmentStatus: e.target.value })}
+                    className={inputClassName}
+                    placeholder="Enter shipment status"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Current Location</label>
+                  <input
+                    type="text"
+                    value={formData.currentLocation}
+                    onChange={(e) => setFormData({ ...formData, currentLocation: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className={textareaClassName}
+                    rows={3}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Current Date</label>
+                  <input
+                    type="text"
+                    value={new Date().toISOString().split('T')[0]}
+                    readOnly
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Shipping Date</label>
+                  <input
+                    type="date"
+                    value={formData.shippingDate || ''}
+                    onChange={(e) => setFormData({ ...formData, shippingDate: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Estimated Delivery Date</label>
+                  <input
+                    type="date"
+                    value={formData.estimatedDeliveryDate || ''}
+                    onChange={(e) => setFormData({ ...formData, estimatedDeliveryDate: e.target.value })}
+                    className={inputClassName}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Tracking History */}
+            <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
+              <h2 className="text-xl font-semibold text-indigo-900">Tracking History</h2>
+              
+              {/* Saved Steps */}
+              {savedSteps.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Saved Steps</h3>
+                  <div className="space-y-4">
+                    {savedSteps.map((steps, index) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-lg relative">
+                        <div className="grid grid-cols-3 gap-6">
+                          <div>
+                            <p className="font-medium text-sm text-gray-500">Step 1</p>
+                            <p className="mt-1">{steps.step1}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm text-gray-500">Step 2</p>
+                            <p className="mt-1">{steps.step2}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm text-gray-500">Step 3</p>
+                            <p className="mt-1">{steps.step3}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => deleteSteps(index)}
+                          className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* New Steps Input */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Steps</h3>
+                <div className="grid grid-cols-3 gap-6 mb-4">
+                  {/* Step 1 */}
+                  <div>
+                    <h4 className="text-lg font-medium text-indigo-900 mb-2">Step 1</h4>
+                    <input
+                      type="text"
+                      value={currentSteps.step1}
+                      onChange={(e) => handleStepChange('step1', e.target.value)}
+                      className={inputClassName}
+                      placeholder="Enter step 1 details"
+                    />
+                  </div>
+
+                  {/* Step 2 */}
+                  <div>
+                    <h4 className="text-lg font-medium text-indigo-900 mb-2">Step 2</h4>
+                    <input
+                      type="text"
+                      value={currentSteps.step2}
+                      onChange={(e) => handleStepChange('step2', e.target.value)}
+                      className={inputClassName}
+                      placeholder="Enter step 2 details"
+                    />
+                  </div>
+
+                  {/* Step 3 */}
+                  <div>
+                    <h4 className="text-lg font-medium text-indigo-900 mb-2">Step 3</h4>
+                    <input
+                      type="text"
+                      value={currentSteps.step3}
+                      onChange={(e) => handleStepChange('step3', e.target.value)}
+                      className={inputClassName}
+                      placeholder="Enter step 3 details"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={saveSteps}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    Save Steps
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4 pt-4">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-6 py-3 text-base font-medium text-indigo-600 bg-white/90 border border-indigo-200 rounded-xl shadow-sm hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-3 text-base font-medium text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 rounded-xl shadow-lg transform transition duration-200 ease-in-out hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
+                    <span>Creating...</span>
+                  </div>
+                ) : 'Create Shipment'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  );
+}
