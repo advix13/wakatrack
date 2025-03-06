@@ -12,6 +12,8 @@ datasource db {
 
 model Shipment {
   id            String          @id @default(uuid())
+  userId        String?         // Make it optional to support existing shipments
+  user          User?          @relation(fields: [userId], references: [id])
   trackingNumber String         @unique
   orderReferenceNumber String?
   customerName  String?
@@ -99,4 +101,14 @@ model EditHistory {
   oldValue    String?
   newValue    String
   timestamp   DateTime  @default(now())
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  shipments     Shipment[]
 }

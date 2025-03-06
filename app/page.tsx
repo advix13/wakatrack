@@ -19,21 +19,31 @@ export default function Home() {
         throw new Error('Please enter a tracking number');
       }
 
+      console.log('[Client] Submitting tracking number:', trackingNumber);
+
       const response = await fetch('/api/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackingNumber }),
+        body: JSON.stringify({ trackingNumber: trackingNumber.trim() }),
       });
 
       const data = await response.json();
+      console.log('[Client] API Response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Error tracking shipment');
       }
 
-      // Redirect to tracking page
-      router.push(`/tracking/${data.trackingNumber}`);
+      if (!data.success || !data.shipmentId) {
+        throw new Error('Shipment not found');
+      }
+
+      // Redirect to tracking page using shipment ID
+      console.log('[Client] Redirecting to:', `/tracking/${data.shipmentId}`);
+      router.push(`/tracking/${data.shipmentId}`);
+      
     } catch (err: any) {
+      console.error('[Client] Error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
