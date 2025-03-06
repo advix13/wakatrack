@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import ShipmentsTable from '@/components/shipments-table';
 import AddressCard from '@/components/address-card';
 import PackageDetailsCard from '@/components/package-details-card';
@@ -10,35 +11,52 @@ import TrackingHistory from '@/components/tracking-history';
 import MapCard from '@/components/map-card';
 import { geocodeLocation } from '@/utils/geocoding';
 
+interface TrackingEvent {
+  id: string;
+  status: string;
+  location: string;
+  timestamp: string;
+}
+
 export default function TrackingPage({ params }: { params: { id: string } }) {
-  const id = params.id;
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [shipment, setShipment] = useState<any>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!params?.id) {
+        setError('No tracking number provided');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await fetch(`/api/admin/shipments/${id}`);
+        setLoading(true);
+        const response = await fetch(`/api/tracking/${params.id}`);
         const data = await response.json();
         
-        if (!response.ok) {
+        if (!response.ok || !data.success) {
           throw new Error(data.message || 'Failed to fetch shipment');
         }
 
-        console.log('Shipment data:', data);
-        console.log('Shipping date:', data.shippingDate);
-        setShipment(data);
+        if (!data.data) {
+          throw new Error('No shipment data received');
+        }
+
+        console.log('Shipment data received:', data.data);
+        setShipment(data.data);
       } catch (error: any) {
         console.error('Error fetching tracking data:', error);
-        setError(error.message);
+        setError(error.message || 'Failed to fetch shipment data');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [params?.id]);
 
   if (loading) {
     return (
@@ -54,6 +72,12 @@ export default function TrackingPage({ params }: { params: { id: string } }) {
         <div className="text-red-500 text-center">
           <h2 className="text-2xl font-bold mb-2">Error</h2>
           <p>{error}</p>
+          <button 
+            onClick={() => router.push('/')}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -65,10 +89,19 @@ export default function TrackingPage({ params }: { params: { id: string } }) {
         <div className="text-gray-500 text-center">
           <h2 className="text-2xl font-bold mb-2">Shipment Not Found</h2>
           <p>The requested shipment could not be found.</p>
+          <button 
+            onClick={() => router.push('/')}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Track Another Shipment
+          </button>
         </div>
       </div>
     );
   }
+
+  const trackingSteps = ['Pickup', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered'];
+  const currentStepIndex = shipment.trackingProgress ? trackingSteps.indexOf(shipment.trackingProgress) : 0;
 
   return (
     <div className="min-h-screen bg-slate-100 p-4 md:p-8">
@@ -90,7 +123,7 @@ export default function TrackingPage({ params }: { params: { id: string } }) {
               statusDetails={shipment.statusDetails}
               description={shipment.description}
               contentsDescription={shipment.contentsDescription}
-              currentStep={shipment.trackingProgress ? ['Pickup', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered'].indexOf(shipment.trackingProgress) : 0}
+              currentStep={currentStepIndex}
             />
           </div>
 
@@ -99,27 +132,27 @@ export default function TrackingPage({ params }: { params: { id: string } }) {
             {/* Destination Address Card */}
             <div className="w-full bg-white rounded-xl shadow-lg p-2.5">
               <AddressCard
-              type="destination"
-              name={shipment.receiverName}
-              streetAddress={shipment.destinationStreetAddress}
-              city={shipment.destinationCity}
-              stateProvince={shipment.destinationState}
-              postalCode={shipment.destinationPostalCode}
-              country={shipment.destinationCountry}
-            />
+                type="destination"
+                name={shipment.receiverName}
+                streetAddress={shipment.destinationStreetAddress}
+                city={shipment.destinationCity}
+                stateProvince={shipment.destinationState}
+                postalCode={shipment.destinationPostalCode}
+                country={shipment.destinationCountry}
+              />
             </div>
 
             {/* Origin Address Card */}
             <div className="bg-white rounded-xl shadow-lg p-2.5">
               <AddressCard
-              type="origin"
-              name={shipment.senderName}
-              streetAddress={shipment.originStreetAddress}
-              city={shipment.originCity}
-              stateProvince={shipment.originState}
-              postalCode={shipment.originPostalCode}
-              country={shipment.originCountry}
-            />
+                type="origin"
+                name={shipment.senderName}
+                streetAddress={shipment.originStreetAddress}
+                city={shipment.originCity}
+                stateProvince={shipment.originState}
+                postalCode={shipment.originPostalCode}
+                country={shipment.originCountry}
+              />
             </div>
           </div>
         </div>
@@ -134,7 +167,7 @@ export default function TrackingPage({ params }: { params: { id: string } }) {
                 trackingNumber={shipment.trackingNumber}
                 status={shipment.shipmentStatus}
                 statusDetails={shipment.statusDetails || 'No status details available'}
-                events={shipment.events?.map(event => ({
+                events={shipment.events?.map((event: TrackingEvent) => ({
                   type: event.status,
                   location: event.location || 'Unknown location',
                   datetime: new Date(event.timestamp).toLocaleString('en-US', {

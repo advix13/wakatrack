@@ -1,5 +1,5 @@
-import NewShipment from './client';
+import ShipmentForm from './client';
 
-export default function Page() {
-  return <NewShipment />;
+export default function NewShipmentPage() {
+  return <ShipmentForm />;
 }

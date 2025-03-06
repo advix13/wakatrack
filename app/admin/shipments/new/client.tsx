@@ -1,9 +1,111 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
-export default function NewShipment() {
+export default function ShipmentForm({ 
+  initialData = null, 
+  isEditMode = false 
+}: { 
+  initialData?: any; 
+  isEditMode?: boolean;
+}) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    trackingNumber: '',
+    orderReferenceNumber: '',
+    customerName: '',
+    email: '',
+    phoneNumber: '',
+    statusDetails: '',
+    statusColor: '#22c55e', // Default green color
+    
+    // Origin Address
+    senderName: '',
+    originStreetAddress: '',
+    originCity: '',
+    originState: '',
+    originCountry: '',
+    originPostalCode: '',
+    origin: '',
+    originLatitude: '',
+    originLongitude: '',
+    
+    // Destination Address
+    receiverName: '',
+    destinationStreetAddress: '',
+    destinationCity: '',
+    destinationState: '',
+    destinationCountry: '',
+    destinationPostalCode: '',
+    destination: '',
+    destinationLatitude: '',
+    destinationLongitude: '',
+    
+    // Package Details
+    weight: '',
+    length: '',
+    width: '',
+    height: '',
+    packageType: '',
+    contentsDescription: '',
+    declaredValue: '',
+    shippingMethod: '',
+    
+    // Tracking Details
+    trackingProgress: 'Pickup', // Default to first step
+    shipmentStatus: '',
+    currentLocation: '',
+    currentLatitude: '',
+    currentLongitude: '',
+    description: '',
+    estimatedDeliveryDate: '',
+    shipmentDate: '',
+    
+    // Additional Information
+    insuranceDetails: '',
+    specialInstructions: '',
+    returnInstructions: '',
+    customerNotes: '',
+    
+    // Additional fields for current location
+    currentCity: '',
+    currentState: '',
+    shippingDate: ''
+  });
+  
+  // Initialize events state
+  const [events, setEvents] = useState<any[]>([]);
+  
+  // Initialize form with data if in edit mode
+  useEffect(() => {
+    if (isEditMode && initialData) {
+      // Format dates for form inputs
+      const formattedData = {
+        ...initialData,
+        estimatedDeliveryDate: initialData.estimatedDeliveryDate ? 
+          new Date(initialData.estimatedDeliveryDate).toISOString().split('T')[0] : '',
+        shipmentDate: initialData.shipmentDate ? 
+          new Date(initialData.shipmentDate).toISOString().split('T')[0] : '',
+      };
+      
+      setFormData(formattedData);
+      
+      // Set events if available
+      if (initialData.events && Array.isArray(initialData.events)) {
+        setEvents(initialData.events.map((event: any) => ({
+          ...event,
+          timestamp: event.timestamp ? 
+            new Date(event.timestamp).toISOString().split('T')[0] : ''
+        })));
+      }
+    }
+  }, [isEditMode, initialData]);
+
   // Helper functions to update addresses
   const updateOriginAddress = (data: any) => {
     const address = [
@@ -90,108 +192,6 @@ export default function NewShipment() {
     setSavedSteps(prev => prev.filter((_, i) => i !== index));
   };
 
-  const [formData, setFormData] = useState<{
-    trackingNumber: string;
-    orderReferenceNumber: string;
-    customerName: string;
-    email: string;
-    phoneNumber: string;
-    statusDetails: string;
-    senderName: string;
-    originStreetAddress: string;
-    originCity: string;
-    originState: string;
-    originCountry: string;
-    originPostalCode: string;
-    origin: string;
-    receiverName: string;
-    destinationStreetAddress: string;
-    destinationCity: string;
-    destinationState: string;
-    destinationCountry: string;
-    destinationPostalCode: string;
-    destination: string;
-    weight: string;
-    length: string;
-    width: string;
-    height: string;
-    packageType: string;
-    contentsDescription: string;
-    declaredValue: string;
-    shippingMethod: string;
-    trackingProgress: string;
-    shipmentStatus: string;
-    currentLocation: string;
-    currentCity: string;
-    currentState: string;
-    description: string;
-    shippingDate: string;
-    estimatedDeliveryDate: string;
-    insuranceDetails: string;
-    specialInstructions: string;
-    returnInstructions: string;
-    customerNotes: string;
-    statusColor: string;
-  }>({
-    trackingNumber: '',
-    orderReferenceNumber: '',
-    customerName: '',
-    email: '',
-    phoneNumber: '',
-    statusDetails: '',
-    
-    // Origin Address
-    senderName: '',
-    originStreetAddress: '',
-    originCity: '',
-    originState: '',
-    originCountry: '',
-    originPostalCode: '',
-    
-    // Destination Address
-    receiverName: '',
-    destinationStreetAddress: '',
-    destinationCity: '',
-    destinationState: '',
-    destinationCountry: '',
-    destinationPostalCode: '',
-    
-    // Package Details
-    weight: '',
-    length: '',
-    width: '',
-    height: '',
-    packageType: '',
-    contentsDescription: '',
-    declaredValue: '',
-    
-    // Shipping Details
-    shippingMethod: '',
-    trackingProgress: 'Pickup',
-    shipmentStatus: 'Pending',
-    currentLocation: '',
-    currentCity: '',
-    currentState: '',
-    description: '',
-    estimatedDeliveryDate: '',
-    insuranceDetails: '',
-    
-    // Additional Information
-    specialInstructions: '',
-    returnInstructions: '',
-    customerNotes: '',
-    statusColor: '#22c55e',  // Default green color
-    
-    // New Fields
-    origin: '',
-    destination: '',
-    shippingDate: new Date().toISOString().split('T')[0],
-  });
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const router = useRouter();
-
   const packageTypes = ['Box', 'Envelope', 'Pallet', 'Other'];
   const shippingMethods = ['Standard', 'Express', 'Overnight'];
   const paymentStatuses = ['Paid', 'Unpaid'];
@@ -209,64 +209,92 @@ export default function NewShipment() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
-
+    setError('');
+    setSuccess(false);
+    
     try {
+      // Validate required fields
       if (!formData.trackingNumber) {
         throw new Error('Tracking number is required');
       }
-
-      console.log('Current saved steps:', savedSteps);
-
-      // Format dates properly
-      const trackingHistory = savedSteps.map(step => {
-        const event = {
-          status: step.step1,    // Status/Type field
-          location: step.step2,  // Location field
-          description: '',
-          timestamp: step.step3  // Use the date provided in the form
-        };
-        console.log('Created tracking event:', event);
-        return event;
-      });
-
-      const submissionData = {
-        ...formData,
-        shipmentDate: formatDateForSubmission(formData.shippingDate),
-        estimatedDeliveryDate: formatDateForSubmission(formData.estimatedDeliveryDate),
-        statusColor: formData.statusColor || '#22c55e',  // Ensure statusColor is included
-        shipmentStatus: formData.shipmentStatus || 'Pending',  // Use shipment status from form
-        currentStatus: formData.shipmentStatus || 'Pending',  // Also set currentStatus
-        trackingHistory
-      };
-
-      console.log('Submitting form data:', submissionData);
       
-      const response = await fetch('/api/admin/shipments', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
+      // Prepare data for API
+      const shipmentData = {
+        ...formData,
+        // Convert string values to numbers where needed
+        originLatitude: formData.originLatitude ? parseFloat(formData.originLatitude) : null,
+        originLongitude: formData.originLongitude ? parseFloat(formData.originLongitude) : null,
+        destinationLatitude: formData.destinationLatitude ? parseFloat(formData.destinationLatitude) : null,
+        destinationLongitude: formData.destinationLongitude ? parseFloat(formData.destinationLongitude) : null,
+        currentLatitude: formData.currentLatitude ? parseFloat(formData.currentLatitude) : null,
+        currentLongitude: formData.currentLongitude ? parseFloat(formData.currentLongitude) : null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        length: formData.length ? parseFloat(formData.length) : null,
+        width: formData.width ? parseFloat(formData.width) : null,
+        height: formData.height ? parseFloat(formData.height) : null,
+        declaredValue: formData.declaredValue ? parseFloat(formData.declaredValue) : null,
+        
+        // Format dates
+        shipmentDate: formData.shipmentDate || null,
+        estimatedDeliveryDate: formData.estimatedDeliveryDate || null,
+        
+        // Include events with proper timestamps
+        events: events.map(event => ({
+          ...event,
+          timestamp: event.timestamp || new Date().toISOString()
+        }))
+      };
+      
+      // Determine API endpoint and method based on mode
+      const url = isEditMode ? 
+        `/api/admin/shipments/${initialData.id}` : 
+        '/api/admin/shipments';
+      
+      const method = isEditMode ? 'PUT' : 'POST';
+      
+      console.log(`[Client] Sending ${method} request to ${url}`);
+      console.log('[Client] Request data:', JSON.stringify(shipmentData, null, 2));
+
+      // Send data to API
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(submissionData),
+        body: JSON.stringify(shipmentData),
       });
 
-      const data = await response.json();
-      console.log('Response data:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create shipment');
+      let result;
+      const responseText = await response.text();
+      console.log('[Client] Raw response:', responseText);
+      
+      try {
+        result = JSON.parse(responseText);
+        console.log('[Client] Parsed response:', result);
+      } catch (e) {
+        console.error('[Client] Failed to parse response:', e);
+        throw new Error('Invalid response from server');
       }
 
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to create shipment');
+      if (!response.ok || !result.success) {
+        const errorMessage = result?.message || result?.error || `Failed to ${isEditMode ? 'update' : 'create'} shipment`;
+        console.error('[Client] Request failed:', errorMessage);
+        throw new Error(errorMessage);
       }
+      
+      setSuccess(true);
+      console.log(`[Client] Shipment ${isEditMode ? 'updated' : 'created'} successfully:`, result.data);
+      
+      // Show success message and redirect
+      setTimeout(() => {
+        router.push('/admin');
+      }, 2000);
 
-      console.log('Response data:', data);
-      router.push('/admin');
     } catch (err: any) {
-      console.error('Error in handleSubmit:', err);
-      setError(err.message || 'An unexpected error occurred');
+      console.error(`[Client] Error ${isEditMode ? 'updating' : 'creating'} shipment:`, err);
+      setError(err.message || `Failed to ${isEditMode ? 'update' : 'create'} shipment`);
     } finally {
       setLoading(false);
     }
@@ -288,7 +316,9 @@ export default function NewShipment() {
         </div>
 
         <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-indigo-100">
-          <h1 className="text-3xl font-bold text-indigo-900 mb-8">Create New Shipment</h1>
+          <h1 className="text-3xl font-bold text-indigo-900 mb-8">
+            {isEditMode ? 'Edit Shipment' : 'Create New Shipment'}
+          </h1>
           
           {error && (
             <div className="mb-6 p-4 text-red-700 bg-red-100/80 backdrop-blur-sm rounded-xl border border-red-200">
@@ -297,6 +327,18 @@ export default function NewShipment() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Form title */}
+            <div className="border-b pb-2">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                {isEditMode ? 'Edit Shipment' : 'Create New Shipment'}
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                {isEditMode 
+                  ? 'Update the shipment information below' 
+                  : 'Fill out the information below to create a new shipment'}
+              </p>
+            </div>
+
             {/* Tracking History Steps */}
             <div className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-xl border border-indigo-50">
               <h2 className="text-xl font-semibold text-indigo-900">Tracking History Step</h2>
@@ -827,27 +869,30 @@ export default function NewShipment() {
               </div>
             </div>
 
-
-            <div className="flex justify-end space-x-4 pt-4">
-              <button
+            {/* Submit button */}
+            <div className="flex justify-end space-x-4">
+              <Button
                 type="button"
-                onClick={() => router.back()}
-                className="px-6 py-3 text-base font-medium text-indigo-600 bg-white/90 border border-indigo-200 rounded-xl shadow-sm hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200"
+                onClick={() => router.push('/admin')}
+                className="bg-gray-200 text-gray-800 hover:bg-gray-300"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="px-6 py-3 text-base font-medium text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 rounded-xl shadow-lg transform transition duration-200 ease-in-out hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
+                className="bg-blue-600 text-white hover:bg-blue-700"
               >
                 {loading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
-                    <span>Creating...</span>
-                  </div>
-                ) : 'Create Shipment'}
-              </button>
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : isEditMode ? 'Update Shipment' : 'Create Shipment'}
+              </Button>
             </div>
           </form>
         </div>
