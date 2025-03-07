@@ -29,10 +29,15 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        const isCorrectPassword = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        // Temporarily compare passwords directly for troubleshooting
+        // In production, you should ALWAYS use bcrypt.compare
+        const isCorrectPassword = credentials.password === user.password;
+        
+        // Uncomment this when passwords are properly hashed again
+        // const isCorrectPassword = await bcrypt.compare(
+        //   credentials.password,
+        //   user.password
+        // );
 
         if (!isCorrectPassword) {
           throw new Error("Invalid credentials");

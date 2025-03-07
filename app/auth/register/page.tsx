@@ -44,17 +44,36 @@ export default function RegisterPage() {
 
       let data;
       try {
+        // Get the response text
         const text = await response.text();
         console.log('Raw response:', text);
-        data = JSON.parse(text);
-        console.log('Parsed response:', data);
-      } catch (parseError) {
-        console.error('Error parsing response:', parseError);
-        throw new Error('Invalid server response');
+        
+        // Only try to parse if there's actual content
+        if (text && text.trim()) {
+          try {
+            data = JSON.parse(text);
+            console.log('Parsed response:', data);
+          } catch (jsonError) {
+            console.error('JSON parse error:', jsonError);
+            throw new Error('Server returned invalid JSON');
+          }
+        } else {
+          console.error('Empty response received');
+          throw new Error('Server returned an empty response');
+        }
+      } catch (error) {
+        console.error('Response handling error:', error);
+        throw error instanceof Error ? error : new Error('Failed to process server response');
       }
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Registration failed');
+      // Check for successful response
+      if (!response.ok) {
+        throw new Error(data?.error || `Server error: ${response.status}`);
+      }
+      
+      // Check for success flag in the response
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Registration failed for unknown reason');
       }
 
       // Show success message
