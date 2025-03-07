@@ -1,0 +1,17 @@
+build:
+  buildCommand: npm run build
+  startCommand: npm start
+
+environment:
+  # These are placeholder values that should be set in Coolify UI
+  - name: DATABASE_URL
+    value: file:./dev.db
+  - name: NEXTAUTH_URL
+    value: http://zkk0gc484gwo8c8sgss8o40w.93.188.164.206.sslip.io
+  - name: NEXTAUTH_SECRET
+    value: REPLACE_WITH_SECURE_SECRET
+
+# Ensure SQLite database is persisted
+persistentStorage:
+  - path: /app/prisma
+    name: prisma-data
