@@ -25,7 +25,7 @@ const PackageDetailsCard = ({
     <Card className="w-full">
       <CardContent className="p-2.5">
         <div className="flex items-center justify-between mb-3">
-          <div className="bg-purple-100 text-purple-600 px-2.5 py-1 rounded-md text-xs font-medium">
+          <div className="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-md text-xs font-bold">
             Package Details
           </div>
         </div>
@@ -36,16 +36,16 @@ const PackageDetailsCard = ({
             <div className="flex items-center gap-2">
               <Scale className="w-4 h-4 text-purple-500" />
               <div>
-                <p className="text-xs text-gray-500">Weight</p>
-                <p className="text-sm font-medium">{weight} kg</p>
+                <p className="text-xs text-gray-700 font-medium">Weight</p>
+                <p className="text-sm font-semibold text-gray-900">{weight} kg</p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
               <Box className="w-4 h-4 text-purple-500" />
               <div>
-                <p className="text-xs text-gray-500">Dimensions</p>
-                <p className="text-sm font-medium">L: {dimensions.length} × W: {dimensions.width} × H: {dimensions.height} cm</p>
+                <p className="text-xs text-gray-700 font-medium">Dimensions</p>
+                <p className="text-sm font-semibold text-gray-900">L: {dimensions.length} × W: {dimensions.width} × H: {dimensions.height} cm</p>
               </div>
             </div>
           </div>
@@ -55,23 +55,23 @@ const PackageDetailsCard = ({
             <div className="flex items-start gap-2">
               <Package className="w-4 h-4 text-purple-500 mt-1" />
               <div>
-                <p className="text-xs text-gray-500">Package Type</p>
-                <p className="text-sm font-medium">{packageType}</p>
+                <p className="text-xs text-gray-700 font-medium">Package Type</p>
+                <p className="text-sm font-semibold text-gray-900">{packageType}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <Hash className="w-4 h-4 text-purple-500 mt-1" />
               <div>
-                <p className="text-xs text-gray-500">Reference Number</p>
-                <p className="text-sm font-medium">{referenceNumber}</p>
+                <p className="text-xs text-gray-700 font-medium">Reference Number</p>
+                <p className="text-sm font-semibold text-gray-900">{referenceNumber}</p>
               </div>
             </div>
 
             <div className="flex items-start gap-2 col-span-2">
               <FileText className="w-4 h-4 text-purple-500 mt-1" />
               <div>
-                <p className="text-xs text-gray-500">Contents Description</p>
-                <p className="text-sm font-medium leading-relaxed">{contentsDescription}</p>
+                <p className="text-xs text-gray-700 font-medium">Contents Description</p>
+                <p className="text-sm font-semibold text-gray-900 leading-relaxed">{contentsDescription}</p>
               </div>
             </div>
           </div>

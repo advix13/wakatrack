@@ -13,7 +13,7 @@ const DescriptionCard = ({
     <Card className="w-full">
       <CardContent className="p-2.5">
         <div className="flex items-center justify-between mb-3">
-          <div className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md text-xs font-medium">
+          <div className="bg-gray-100 text-gray-800 px-2.5 py-1 rounded-md text-xs font-bold">
             Description
           </div>
         </div>
@@ -21,7 +21,7 @@ const DescriptionCard = ({
         <div className="space-y-3">
           <div className="flex gap-2">
             <FileText className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
-            <p className="text-sm text-gray-600">{description}</p>
+            <p className="text-sm font-semibold text-gray-900">{description}</p>
           </div>
         </div>
       </CardContent>

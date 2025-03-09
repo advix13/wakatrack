@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 
 export default function ShipmentForm({ 
@@ -12,6 +13,7 @@ export default function ShipmentForm({
   isEditMode?: boolean;
 }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -214,6 +216,11 @@ export default function ShipmentForm({
     setSuccess(false);
     
     try {
+      // Check if session exists and is valid
+      if (!session || !session.user || !session.user.id) {
+        throw new Error('You must be logged in to create a shipment. Please log in and try again.');
+      }
+      
       // Validate required fields
       if (!formData.trackingNumber) {
         throw new Error('Tracking number is required');
@@ -243,44 +250,58 @@ export default function ShipmentForm({
         events: events.map(event => ({
           ...event,
           timestamp: event.timestamp || new Date().toISOString()
-        }))
+        })),
+        
+        // Explicitly include user ID from session for additional security
+        userId: session.user.id
       };
       
-      // Determine API endpoint and method based on mode
-      const url = isEditMode ? 
-        `/api/admin/shipments/${initialData.id}` : 
-        '/api/admin/shipments';
+      // Determine API endpoint and method based on mode and user role
+      const isAdmin = session?.user?.isAdmin === true;
+      console.log('[Client] User session:', session?.user);
+      console.log('[Client] Is admin:', isAdmin);
+      
+      let url;
+      if (isEditMode) {
+        // Use different endpoints for admin and regular users when editing
+        url = isAdmin 
+          ? `/api/admin/shipments/${initialData.id}` 
+          : `/api/shipments/update/${initialData.id}`;
+      } else {
+        // Use different endpoints for admin and regular users when creating
+        url = isAdmin ? '/api/admin/shipments' : '/api/shipments/create';
+      }
       
       const method = isEditMode ? 'PUT' : 'POST';
       
       console.log(`[Client] Sending ${method} request to ${url}`);
       console.log('[Client] Request data:', JSON.stringify(shipmentData, null, 2));
 
-      // Send data to API
+      // Send data to API with improved error handling
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(shipmentData),
+        credentials: 'include' // Ensure cookies are sent with the request
       });
 
-      let result;
-      const responseText = await response.text();
-      console.log('[Client] Raw response:', responseText);
-      
-      try {
-        result = JSON.parse(responseText);
-        console.log('[Client] Parsed response:', result);
-      } catch (e) {
-        console.error('[Client] Failed to parse response:', e);
-        throw new Error('Invalid response from server');
+      // Handle response status codes
+      if (response.status === 401) {
+        // Handle authentication errors
+        const result = await response.json();
+        console.error('[Client] Authentication error:', result);
+        throw new Error(result?.message || 'Authentication failed. Please log in again.');
       }
+      
+      // Get response data
+      const result = await response.json();
+      console.log('[Client] API Response:', result);
 
-      if (!response.ok || !result.success) {
+      if (!response.ok) {
         const errorMessage = result?.message || result?.error || `Failed to ${isEditMode ? 'update' : 'create'} shipment`;
-        console.error('[Client] Request failed:', errorMessage);
+        console.error('[Client] Request failed:', errorMessage, 'Full result:', result);
         throw new Error(errorMessage);
       }
       
@@ -289,7 +310,9 @@ export default function ShipmentForm({
       
       // Show success message and redirect
       setTimeout(() => {
-        router.push('/admin');
+        // Check if user is admin or regular user and redirect accordingly
+        const isAdmin = session?.user?.isAdmin === true;
+        router.push(isAdmin ? '/admin' : '/dashboard');
       }, 2000);
 
     } catch (err: any) {
@@ -308,7 +331,10 @@ export default function ShipmentForm({
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <button
-            onClick={() => router.back()}
+            onClick={() => {
+              const isAdmin = session?.user?.isAdmin === true;
+              router.push(isAdmin ? '/admin' : '/dashboard');
+            }}
             className="text-indigo-600 hover:text-indigo-900 font-medium"
           >
             ← Back to Dashboard

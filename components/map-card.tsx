@@ -91,7 +91,7 @@ const MapCard: React.FC<MapCardProps> = ({ origin, destination, currentLocation 
       html: `
         <div class="relative">
           <div class="w-3 h-3 rounded-full bg-${color}-500 border-2 border-white shadow-lg"></div>
-          <div class="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white px-1.5 py-0.5 rounded text-[10px] font-medium shadow-sm border border-gray-200">
+          <div class="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white px-2 py-1 rounded text-xs font-bold shadow-md border border-gray-300">
             ${label}
           </div>
         </div>
@@ -255,10 +255,10 @@ const MapCard: React.FC<MapCardProps> = ({ origin, destination, currentLocation 
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <div className="truncate">
-                <span className="text-sm font-medium">Origin</span>
+                <span className="text-sm font-bold text-gray-900">Origin</span>
               </div>
             </div>
-            <div className="pl-3 -mt-1 text-[11px] text-gray-500 truncate">{origin}</div>
+            <div className="pl-3 -mt-1 text-xs font-semibold text-gray-900 truncate">{origin}</div>
           </div>
 
           {/* Current Location */}
@@ -266,11 +266,11 @@ const MapCard: React.FC<MapCardProps> = ({ origin, destination, currentLocation 
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
               <div className="truncate">
-                <span className="text-sm font-medium">Current</span>
+                <span className="text-sm font-bold text-gray-900">Current</span>
               </div>
             </div>
             {currentLocation && (
-              <div className="pl-3 -mt-1 text-[11px] text-gray-500 truncate">{currentLocation}</div>
+              <div className="pl-3 -mt-1 text-xs font-semibold text-gray-900 truncate">{currentLocation}</div>
             )}
           </div>
 
@@ -279,22 +279,22 @@ const MapCard: React.FC<MapCardProps> = ({ origin, destination, currentLocation 
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-red-500" />
               <div className="truncate">
-                <span className="text-sm font-medium">Destination</span>
+                <span className="text-sm font-bold text-gray-900">Destination</span>
               </div>
             </div>
-            <div className="pl-3 -mt-1 text-[11px] text-gray-500 truncate">{destination}</div>
+            <div className="pl-3 -mt-1 text-xs font-semibold text-gray-900 truncate">{destination}</div>
           </div>
 
           {/* Route Types */}
           <div className="flex flex-col gap-0 items-end">
             <div className="flex items-center gap-1">
               <div className="w-3 h-0.5 bg-green-500" />
-              <span className="text-[11px] text-gray-500">Distance covered</span>
+              <span className="text-xs font-medium text-gray-900">Distance covered</span>
             </div>
             <div className="flex items-center gap-1 -mt-0.5">
               <div className="w-3 h-0.5 bg-red-500 border-t border-dashed" 
                    style={{ borderColor: '#ef4444' }} />
-              <span className="text-[11px] text-gray-500">Distance to go</span>
+              <span className="text-xs font-medium text-gray-900">Distance to go</span>
             </div>
           </div>
         </div>

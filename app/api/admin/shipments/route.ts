@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function POST(request: Request) {
   console.log('[API] Starting POST request');
   try {
+    // Get the current user session
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    const userEmail = session?.user?.email;
+    
+    console.log('[API] User session:', userId, userEmail);
+    
     // Connect to database
     await prisma.$connect();
     console.log('[API] Database connection successful');
@@ -88,6 +97,10 @@ export async function POST(request: Request) {
         // Create shipment with properly formatted data
         const newShipment = await prisma.shipment.create({
           data: {
+            // Associate with current user if available
+            userId: userId || null,
+            userEmail: userEmail || null,
+            
             // Basic Information
             trackingNumber: requestData.trackingNumber,
             orderReferenceNumber: requestData.orderReferenceNumber || null,

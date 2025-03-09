@@ -40,13 +40,13 @@ const ShippingDetailsCard = ({
       <CardContent className="p-2.5">
         {/* Header with Tracking Number and Dates */}
         <div className="flex items-center justify-between mb-4">
-          <div className="bg-blue-100 text-blue-600 px-3 py-1.5 rounded-md text-sm font-semibold">
+          <div className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md text-sm font-bold">
             {trackingNumber}
           </div>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center">
-              <span className="text-gray-500 mr-1">Shipped:</span>
-              <span className="font-medium">
+              <span className="text-gray-700 mr-1 font-medium">Shipped:</span>
+              <span className="font-semibold text-gray-900">
                 {new Date(shippingDate).toLocaleDateString('en-US', { 
                   month: 'short', 
                   day: 'numeric'
@@ -54,7 +54,7 @@ const ShippingDetailsCard = ({
               </span>
             </div>
             <div 
-              className="text-white px-2.5 py-1 rounded-md text-xs font-medium bg-[#22c55e]"
+              className="text-white px-2.5 py-1 rounded-md text-xs font-bold bg-[#22c55e]"
             >
               DELIVERY BY: {new Date(deliveryDate).toLocaleDateString('en-US', { 
                 month: 'short', 
@@ -69,16 +69,16 @@ const ShippingDetailsCard = ({
           <div className="flex items-start gap-2">
             <MapPin className="w-4 h-4 text-blue-500 mt-1" />
             <div>
-              <p className="text-xs text-gray-500">Origin</p>
-              <p className="text-sm font-medium">{origin}</p>
+              <p className="text-xs text-gray-700 font-medium">Origin</p>
+              <p className="text-sm font-semibold text-gray-900">{origin}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2">
             <MapPin className="w-4 h-4 text-blue-500 mt-1" />
             <div>
-              <p className="text-xs text-gray-500">Destination</p>
-              <p className="text-sm font-medium">{destination}</p>
+              <p className="text-xs text-gray-700 font-medium">Destination</p>
+              <p className="text-sm font-semibold text-gray-900">{destination}</p>
             </div>
           </div>
         </div>
@@ -88,16 +88,16 @@ const ShippingDetailsCard = ({
           <div className="flex items-start gap-2">
             <Truck className="w-4 h-4 text-blue-500 mt-1" />
             <div>
-              <p className="text-xs text-gray-500">Current Location</p>
-              <p className="text-sm font-medium">{currentLocation}</p>
+              <p className="text-xs text-gray-700 font-medium">Current Location</p>
+              <p className="text-sm font-semibold text-gray-900">{currentLocation}</p>
             </div>
           </div>
           
           <div className="flex items-start gap-2">
             <Clock className="w-4 h-4 text-blue-500 mt-1" />
             <div>
-              <p className="text-xs text-gray-500">Current Date</p>
-              <p className="text-sm font-medium">{currentDate}</p>
+              <p className="text-xs text-gray-700 font-medium">Current Date</p>
+              <p className="text-sm font-semibold text-gray-900">{currentDate}</p>
             </div>
           </div>
         </div>

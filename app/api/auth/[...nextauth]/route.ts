@@ -5,8 +5,22 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth/next";
 
+// Extend the built-in User type
+declare module "next-auth" {
+  interface User {
+    id: string;
+    email: string;
+    name?: string | null;
+    isAdmin: boolean;
+  }
+
+  interface Session {
+    user: User;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as any, // Type assertion to avoid adapter mismatch
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -43,6 +57,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
+          isAdmin: user.isAdmin,
         };
       }
     })
@@ -53,7 +68,7 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/login",
-    signUp: "/auth/register",
+    error: "/auth/error"
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -61,6 +76,7 @@ export const authOptions: NextAuthOptions = {
         return {
           ...token,
           id: user.id,
+          isAdmin: user.isAdmin,
         };
       }
       return token;
@@ -71,6 +87,7 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.id,
+          isAdmin: token.isAdmin,
         },
       };
     },

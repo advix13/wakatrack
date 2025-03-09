@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../auth/[...nextauth]/route';
 
 export async function POST(request: Request) {
   try {
     const { trackingNumber } = await request.json();
+    
+    // Get the user session
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
 
     if (!trackingNumber) {
       return NextResponse.json(
@@ -23,6 +29,18 @@ export async function POST(request: Request) {
         }
       }
     });
+    
+    // If the shipment exists, associate it with the current user
+    // This ensures that each shipment is properly linked to the user who tracked it
+    if (shipment && userId) {
+      console.log(`Associating shipment ${trackingNumber} with user ${userId}`);
+      
+      // Update the shipment to belong to this user
+      await prisma.shipment.update({
+        where: { id: shipment.id },
+        data: { userId }
+      });
+    }
 
     if (!shipment) {
       return NextResponse.json(

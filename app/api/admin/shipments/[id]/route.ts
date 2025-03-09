@@ -1,51 +1,208 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   console.log('[API] GET /api/admin/shipments/[id] - Start');
+  
+  // Initialize database connection variable to ensure proper cleanup
+  let dbConnected = false;
+  
   try {
+    // Get the current user session with improved error handling
+    let session;
+    try {
+      session = await getServerSession(authOptions);
+      console.log('[API] User session:', session ? JSON.stringify(session, null, 2) : 'No session found');
+      
+      if (!session) {
+        return new NextResponse(
+          JSON.stringify({ 
+            success: false, 
+            message: 'Unauthorized - No valid session found. Please log in again.'
+          }),
+          { 
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } catch (sessionError) {
+      console.error('[API] Error retrieving session:', sessionError);
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Authentication error - Unable to validate your session',
+          error: sessionError instanceof Error ? sessionError.message : 'Unknown session error'
+        }),
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    const userId = session?.user?.id;
+    const isAdmin = session?.user?.isAdmin === true;
+    
+    console.log('[API] User ID:', userId);
+    console.log('[API] Is Admin:', isAdmin);
+    
+    // Validate user data from session
+    if (!userId) {
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Unauthorized - User ID not found in session. Please log in again.'
+        }),
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Validate admin status
+    if (!isAdmin) {
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Unauthorized - Admin access required'
+        }),
+        { 
+          status: 403,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     await prisma.$connect();
+    dbConnected = true;
     console.log('[API] Database connection successful');
     
     const shipment = await prisma.shipment.findUnique({
       where: { id: params.id },
-      include: {
-        events: {
-          orderBy: {
-            timestamp: 'desc'
-          }
-        }
-      }
+      include: { events: true }
     });
-
+    
     if (!shipment) {
-      return NextResponse.json(
-        { success: false, message: 'Shipment not found' },
-        { status: 404 }
+      return new NextResponse(
+        JSON.stringify({ success: false, message: 'Shipment not found' }),
+        { 
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
-
-    return NextResponse.json(
-      { success: true, data: shipment },
-      { status: 200 }
+    
+    return new NextResponse(
+      JSON.stringify({ success: true, data: shipment }),
+      { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
-
   } catch (error) {
     console.error('[API] Error fetching shipment:', error);
-    return NextResponse.json(
-      { success: false, message: 'Failed to fetch shipment', error: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ 
+        success: false, 
+        message: 'Failed to fetch shipment',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   } finally {
-    await prisma.$disconnect();
-    console.log('[API] Database disconnected successfully');
+    // Ensure database connection is closed properly
+    if (dbConnected) {
+      try {
+        await prisma.$disconnect();
+        console.log('[API] Database disconnected successfully');
+      } catch (disconnectError) {
+        console.error('[API] Error disconnecting from database:', disconnectError);
+      }
+    }
   }
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   console.log('[API] PUT /api/admin/shipments/[id] - Start', { id: params?.id });
   
+  // Initialize database connection variable to ensure proper cleanup
+  let dbConnected = false;
+  
   try {
+    // Get the current user session with improved error handling
+    let session;
+    try {
+      session = await getServerSession(authOptions);
+      console.log('[API] User session:', session ? JSON.stringify(session, null, 2) : 'No session found');
+      
+      if (!session) {
+        return new NextResponse(
+          JSON.stringify({ 
+            success: false, 
+            message: 'Unauthorized - No valid session found. Please log in again.'
+          }),
+          { 
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } catch (sessionError) {
+      console.error('[API] Error retrieving session:', sessionError);
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Authentication error - Unable to validate your session',
+          error: sessionError instanceof Error ? sessionError.message : 'Unknown session error'
+        }),
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    const userId = session?.user?.id;
+    const isAdmin = session?.user?.isAdmin === true;
+    
+    console.log('[API] User ID:', userId);
+    console.log('[API] Is Admin:', isAdmin);
+    
+    // Validate user data from session
+    if (!userId) {
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Unauthorized - User ID not found in session. Please log in again.'
+        }),
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Validate admin status
+    if (!isAdmin) {
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Unauthorized - Admin access required'
+        }),
+        { 
+          status: 403,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     // Validate ID
     if (!params?.id) {
       console.log('[API] Error: No shipment ID provided');
@@ -60,6 +217,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     // Connect to database
     await prisma.$connect();
+    dbConnected = true;
     console.log('[API] Database connection successful');
     
     // Parse request body
@@ -210,10 +368,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       success: false,
       message: 'Failed to update shipment',
       error: errorMessage,
-      details: error instanceof Error ? {
-        name: error.name,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      } : undefined
+      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
     };
     
     return new NextResponse(
@@ -224,44 +379,163 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       }
     );
   } finally {
-    try {
-      await prisma.$disconnect();
-      console.log('[API] Database disconnected successfully');
-    } catch (error) {
-      console.error('[API] Error disconnecting from database:', error);
+    // Ensure database connection is closed properly
+    if (dbConnected) {
+      try {
+        await prisma.$disconnect();
+        console.log('[API] Database disconnected successfully');
+      } catch (disconnectError) {
+        console.error('[API] Error disconnecting from database:', disconnectError);
+      }
     }
   }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  console.log('[API] DELETE /api/admin/shipments/[id] - Start');
+  console.log('[API] DELETE /api/admin/shipments/[id] - Start', { id: params?.id });
+  
+  // Initialize database connection variable to ensure proper cleanup
+  let dbConnected = false;
+  
   try {
+    // Get the current user session with improved error handling
+    let session;
+    try {
+      session = await getServerSession(authOptions);
+      console.log('[API] User session:', session ? JSON.stringify(session, null, 2) : 'No session found');
+      
+      if (!session) {
+        return new NextResponse(
+          JSON.stringify({ 
+            success: false, 
+            message: 'Unauthorized - No valid session found. Please log in again.'
+          }),
+          { 
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } catch (sessionError) {
+      console.error('[API] Error retrieving session:', sessionError);
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Authentication error - Unable to validate your session',
+          error: sessionError instanceof Error ? sessionError.message : 'Unknown session error'
+        }),
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    const userId = session?.user?.id;
+    const isAdmin = session?.user?.isAdmin === true;
+    
+    console.log('[API] User ID:', userId);
+    console.log('[API] Is Admin:', isAdmin);
+    
+    // Validate user data from session
+    if (!userId) {
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Unauthorized - User ID not found in session. Please log in again.'
+        }),
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Validate admin status
+    if (!isAdmin) {
+      return new NextResponse(
+        JSON.stringify({ 
+          success: false, 
+          message: 'Unauthorized - Admin access required'
+        }),
+        { 
+          status: 403,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Validate ID
+    if (!params?.id) {
+      console.log('[API] Error: No shipment ID provided');
+      return new NextResponse(
+        JSON.stringify({ success: false, message: 'No shipment ID provided' }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Connect to database
     await prisma.$connect();
+    dbConnected = true;
     console.log('[API] Database connection successful');
     
-    // Delete associated events first
+    // Check if shipment exists
+    const existingShipment = await prisma.shipment.findUnique({
+      where: { id: params.id }
+    });
+    
+    if (!existingShipment) {
+      return new NextResponse(
+        JSON.stringify({ success: false, message: 'Shipment not found' }),
+        { 
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Delete tracking events first to avoid foreign key constraints
     await prisma.trackingEvent.deleteMany({
       where: { shipmentId: params.id }
     });
     
-    // Then delete the shipment
+    // Delete the shipment
     await prisma.shipment.delete({
       where: { id: params.id }
     });
     
-    return NextResponse.json(
-      { success: true, message: 'Shipment deleted successfully' },
-      { status: 200 }
+    return new NextResponse(
+      JSON.stringify({ success: true, message: 'Shipment deleted successfully' }),
+      { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
-    
   } catch (error) {
     console.error('[API] Error deleting shipment:', error);
-    return NextResponse.json(
-      { success: false, message: 'Failed to delete shipment', error: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ 
+        success: false, 
+        message: 'Failed to delete shipment',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     );
   } finally {
-    await prisma.$disconnect();
-    console.log('[API] Database disconnected successfully');
+    // Ensure database connection is closed properly
+    if (dbConnected) {
+      try {
+        await prisma.$disconnect();
+        console.log('[API] Database disconnected successfully');
+      } catch (disconnectError) {
+        console.error('[API] Error disconnecting from database:', disconnectError);
+      }
+    }
   }
 }

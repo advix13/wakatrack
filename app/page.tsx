@@ -54,8 +54,8 @@ export default function Home() {
     <main className="min-h-screen bg-white pt-20 px-4">
       <div className="w-full max-w-xl mx-auto space-y-6 p-5 rounded-lg border border-gray-200 shadow-sm">
         <div className="space-y-1 pb-2 border-b border-gray-200">
-          <h1 className="text-2xl font-light text-gray-900">Track your package</h1>
-          <p className="text-xs text-gray-500">Real-time shipment updates</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Track your package</h1>
+          <p className="text-sm text-gray-700">Real-time shipment updates</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -64,7 +64,7 @@ export default function Home() {
               type="text"
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
-              className="w-full px-3 py-2.5 text-base rounded-md border border-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition duration-200"
+              className="w-full px-3 py-2.5 text-base font-medium rounded-md border border-gray-300 placeholder-gray-600 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition duration-200"
               placeholder="Enter tracking number"
               required
             />
@@ -85,7 +85,7 @@ export default function Home() {
           )}
         </form>
 
-        <p className="text-center text-gray-500 text-sm">
+        <p className="text-center text-gray-700 text-sm font-medium">
           Enter your tracking number to see the latest status of your shipment
         </p>
       </div>

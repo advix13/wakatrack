@@ -7,12 +7,15 @@ export type ShipmentStatus =
 
 export interface ShipmentRecord {
   id: string;
+  userId?: string;
+  userEmail?: string;
   trackingNumber: string;
   status: ShipmentStatus;
   origin: string;
   destination: string;
   currentLocation: string;
   lastUpdated: string;
+  currentStatus?: string;
 }
 
 export const getStatusColor = (status: ShipmentStatus): string => {
