@@ -13,6 +13,15 @@ interface TrackingHistoryProps {
   }>;
 }
 
+// Custom styles to hide scrollbar across all browsers
+const hideScrollbarStyle = {
+  msOverflowStyle: 'none',  /* IE and Edge */
+  scrollbarWidth: 'none',   /* Firefox */
+  '&::-webkit-scrollbar': {
+    display: 'none'         /* Chrome, Safari and Opera */
+  }
+};
+
 const TrackingHistory = ({
   trackingNumber,
   status,
@@ -32,7 +41,18 @@ const TrackingHistory = ({
           </div>
         </div>
 
-        <div className="h-[180px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-amber-200 scrollbar-track-transparent hover:scrollbar-thumb-amber-300">
+        <div 
+          className="h-[180px] overflow-y-auto pr-6" 
+          style={{ 
+            msOverflowStyle: 'none', 
+            scrollbarWidth: 'none' 
+          }}
+        >
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           <div className="relative">
             {events.length > 0 && (
               <div className="absolute left-1 top-2 bottom-2 w-0.5 bg-amber-200" />
@@ -44,7 +64,7 @@ const TrackingHistory = ({
                     <div className="relative w-2.5 h-2.5">
                       <div className="absolute w-2.5 h-2.5 bg-amber-500 rounded-full z-10" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 pr-8">
                       <div className="flex justify-between items-start">
                         <p className="text-gray-900 font-medium text-sm">{event.type}</p>
                         <p className="text-gray-500 text-sm">

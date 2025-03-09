@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import ShipmentsTable from '@/components/shipments-table';
 import AddressCard from '@/components/address-card';
 import PackageDetailsCard from '@/components/package-details-card';
 import ShippingDetailsCard from '@/components/shipping-details-card';
 import DescriptionCard from '@/components/description-card';
 import TrackingHistory from '@/components/tracking-history';
+import TrackingTable from '@/components/tracking-table';
 import MapCard from '@/components/map-card';
 import { geocodeLocation } from '@/utils/geocoding';
 
@@ -213,20 +213,20 @@ export default function TrackingPage({ params }: { params: { id: string } }) {
           />
         </div>
 
-        {/* Third Section - Tracking History Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden p-6">
-          <ShipmentsTable
-            shipments={[
-              {
-                id: shipment.id,
-                trackingNumber: shipment.trackingNumber,
-                origin: shipment.origin,
-                destination: shipment.destination,
-                currentLocation: shipment.currentLocation || 'Unknown',
-                status: shipment.shipmentStatus,
-                lastUpdated: shipment.updatedAt || new Date().toISOString()
-              }
-            ]}
+        {/* Third Section - Tracking Details Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <TrackingTable
+            shipment={{
+              trackingNumber: shipment.trackingNumber,
+              origin: shipment.origin,
+              destination: shipment.destination,
+              shipmentStatus: shipment.shipmentStatus,
+              currentLocation: shipment.currentLocation,
+              shipmentDate: shipment.shipmentDate,
+              estimatedDeliveryDate: shipment.estimatedDeliveryDate,
+              statusColor: shipment.statusColor,
+              trackingProgress: shipment.trackingProgress
+            }}
           />
         </div>
       </div>

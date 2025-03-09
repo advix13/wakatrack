@@ -226,6 +226,18 @@ export default function ShipmentForm({
         throw new Error('Tracking number is required');
       }
       
+      // Convert savedSteps to events format
+      const stepsAsEvents = savedSteps.map((step, index) => ({
+        id: `step-${index}`,
+        status: step.step1,
+        location: step.step2,
+        timestamp: step.step3,
+        description: step.step1 // Use status as description if needed
+      }));
+      
+      // Combine steps with existing events, putting new steps at the beginning
+      const combinedEvents = [...stepsAsEvents, ...events];
+      
       // Prepare data for API
       const shipmentData = {
         ...formData,
@@ -246,8 +258,8 @@ export default function ShipmentForm({
         shipmentDate: formData.shipmentDate || null,
         estimatedDeliveryDate: formData.estimatedDeliveryDate || null,
         
-        // Include events with proper timestamps
-        events: events.map(event => ({
+        // Include events with proper timestamps, now including savedSteps
+        events: combinedEvents.map(event => ({
           ...event,
           timestamp: event.timestamp || new Date().toISOString()
         })),
@@ -323,8 +335,8 @@ export default function ShipmentForm({
     }
   };
 
-  const inputClassName = "mt-2 block w-full px-4 py-3 text-base rounded-xl border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-white/90 transition duration-200 ease-in-out";
-  const textareaClassName = "mt-2 block w-full px-4 py-3 text-base rounded-xl border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-white/90 transition duration-200 ease-in-out";
+  const inputClassName = "mt-2 block w-full px-4 py-3 text-base rounded-xl border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-white/90 transition duration-200 ease-in-out text-black";
+  const textareaClassName = "mt-2 block w-full px-4 py-3 text-base rounded-xl border border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-white/90 transition duration-200 ease-in-out text-black";
 
   return (
     <main className="min-h-screen p-8 bg-gradient-to-br from-purple-100 via-indigo-100 to-blue-100">

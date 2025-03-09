@@ -109,7 +109,7 @@ export default function AdminDashboardPage() {
             </Button>
             <Button 
               onClick={() => router.push('/')}
-              className="flex items-center gap-2 bg-black hover:bg-orange-500"
+              className="flex items-center gap-2 bg-black hover:bg-orange-500 text-white"
             >
               <Plus size={16} />
               Track New Package
@@ -129,7 +129,7 @@ export default function AdminDashboardPage() {
             <p className="text-gray-600 mb-6">There are no shipments in the system yet.</p>
             <Button 
               onClick={() => router.push('/')}
-              className="bg-black hover:bg-orange-500"
+              className="bg-black hover:bg-orange-500 text-white"
             >
               Track Your First Package
             </Button>
