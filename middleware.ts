@@ -64,9 +64,15 @@ export default async function middleware(request: NextRequestWithAuth) {
   
   // Protect API routes except auth endpoints
   if (isApiRoute && !request.nextUrl.pathname.startsWith('/api/auth')) {
+    // Allow public access to tracking endpoints
+    const isPublicEndpoint = 
+      request.nextUrl.pathname.startsWith('/api/public') ||
+      request.nextUrl.pathname.startsWith('/api/track') ||
+      request.nextUrl.pathname.startsWith('/api/tracking/');
+    
     // For API routes, we'll let the API handlers handle authentication
     // This is just an additional layer of protection
-    if (!token && !request.nextUrl.pathname.startsWith('/api/public')) {
+    if (!token && !isPublicEndpoint) {
       return new NextResponse(
         JSON.stringify({ 
           success: false, 

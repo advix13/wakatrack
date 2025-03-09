@@ -44,7 +44,7 @@ const ShippingDetailsCard = ({
             {trackingNumber}
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center">
+            <div className="hidden md:flex items-center">
               <span className="text-gray-700 mr-1 font-medium">Shipped:</span>
               <span className="font-semibold text-gray-900">
                 {new Date(shippingDate).toLocaleDateString('en-US', { 

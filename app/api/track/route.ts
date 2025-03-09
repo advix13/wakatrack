@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     const { trackingNumber } = await request.json();
     
-    // Get the user session
+    // Get the user session (optional)
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       }
     });
     
-    // If the shipment exists, associate it with the current user
+    // If the shipment exists and user is logged in, associate it with the current user
     // This ensures that each shipment is properly linked to the user who tracked it
     if (shipment && userId) {
       console.log(`Associating shipment ${trackingNumber} with user ${userId}`);
